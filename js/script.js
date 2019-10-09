@@ -1,5 +1,7 @@
 var app = document.getElementById('app');
 var LIST = [];
+var STATE = 0;
+var state_list = ['All', 'Active', 'Done'];
 
 function mkTag(tag, clss, cont) {
     let html = document.createElement(tag);
@@ -35,10 +37,11 @@ function find(qry_uuid) {
     }
 }
 function delBtnClick(e) {
-    console.log(e.target.dataset.uuid);
-    console.log(LIST);
-    console.log(find(e.target.dataset.uuid));
     LIST.splice(find(e.target.dataset.uuid), 1);
+    stateManager();
+}
+function checkBoxTick(e) {
+    LIST[find(e.target.dataset.uuid)].done = !LIST[find(e.target.dataset.uuid)].done;
     stateManager();
 }
 function makeItemHtml(obj) {
@@ -49,12 +52,21 @@ function makeItemHtml(obj) {
     let tick_Text = mkTag('div', 'input-group-text');
     let tick = mkTag('input');
     tick.setAttribute('type', 'checkbox');
+    if (obj.done) {
+        tick.setAttribute('checked', true);
+    }
+    tick.setAttribute('data-uuid', obj.uuid);
+    tick.addEventListener('change', checkBoxTick);
 
     tick_Text.appendChild(tick);
     prep.appendChild(tick_Text);
     grp_Div.appendChild(prep);
 
     let txt = mkTag('span', 'input-group-text col', obj.title);
+    if (obj.done) {
+        txt.setAttribute('style', 'text-decoration: line-through');
+        txt.setAttribute('class', 'input-group-text col text-muted')
+    }
     grp_Div.appendChild(txt);
 
     let appnd = mkTag('div', 'input-group-append col-2');
@@ -75,11 +87,24 @@ function returnContDiv() {
 function popTodoItems() {
     let cont_div = returnContDiv();
     cont_div.innerHTML = '';
-    for (list_item of LIST) {
-        let item_html = makeItemHtml(list_item);
-        cont_div.prepend(item_html);
+    if (STATE != 1) {
+        for (list_item of LIST) {
+            if (list_item.done) {
+                let item_html = makeItemHtml(list_item);
+                cont_div.prepend(item_html);
+            }
+        }
+    }
+    if (STATE != 2) {
+        for (list_item of LIST) {
+            if (!list_item.done) {
+                let item_html = makeItemHtml(list_item);
+                cont_div.prepend(item_html);
+            }
+        }
     }
 }
+
 function storeList() {
     localStorage.setItem('list', JSON.stringify(LIST));
 }
@@ -87,6 +112,7 @@ function storeList() {
 function stateManager() {
     popTodoItems();
     storeList();
+    // console.log(LIST);
 }
 function submitClick(e) {
     let input_box = document.getElementById('inputBox');
@@ -96,7 +122,36 @@ function submitClick(e) {
     stateManager();
 }
 
+function allDoneClick() {
+    for (list_item of LIST) {
+        list_item.done = true;
+    }
+    stateManager();
+}
+function allNotDoneClick() {
+    for (list_item of LIST) {
+        list_item.done = false;
+    }
+    stateManager();
+}
+
+function allDelClick() {
+    for (let idx =0; idx < LIST.length; idx++) {
+        if (LIST[idx].done) {
+            console.log(idx);
+            console.log('array before removing:');
+            console.log(LIST);
+            LIST.splice(idx, 1);
+            console.log('array after removing:');
+            console.log(LIST);
+            idx = -1;
+        }
+    }
+    stateManager();
+}
+
 // html creation --------
+
 function makeInputHtml() {
     // --- make html objects ---
     let row = mkTag('div', 'row py-3');
@@ -106,6 +161,7 @@ function makeInputHtml() {
     let inField = mkTag('input', 'form-control');
     inField.setAttribute('id', 'inputBox');
     inField.setAttribute('type', 'text');
+    inField.setAttribute('placeholder', 'Add New Item');
     inField.addEventListener('keyup', function (event) {
         if (event.keyCode === 13) {
             event.preventDefault();
@@ -115,7 +171,7 @@ function makeInputHtml() {
     // input group append div
     let inAppendDiv = mkTag('div', 'input-group-append');
     // submit button
-    let submitBtn = mkTag('button', 'btn btn-outline-secondary', 'Add')
+    let submitBtn = mkTag('button', 'btn btn-primary', 'Add')
     submitBtn.setAttribute('type', 'button');
     submitBtn.setAttribute('id', 'inputBtn');
     submitBtn.addEventListener('click', submitClick);
@@ -129,19 +185,62 @@ function makeInputHtml() {
     return row;
 
 }
+function makeModeChangeRow() {
+    let row = mkTag('div', 'row py-3');
+    row.setAttribute('role', 'group');
+
+    let all_btn = mkTag('button', 'btn btn-outline-secondary col', 'Show All');
+    all_btn.addEventListener('click', () => { STATE = 0; stateManager() });
+    let active_btn = mkTag('button', 'btn btn-outline-secondary col', 'Active');
+    active_btn.addEventListener('click', () => { STATE = 1; stateManager() });
+    let done_btn = mkTag('button', 'btn btn-outline-secondary col', 'Completed');
+    done_btn.addEventListener('click', () => { STATE = 2; stateManager() });
+
+    row.appendChild(all_btn);
+    row.appendChild(active_btn);
+    row.appendChild(done_btn);
+
+    return row;
+}
+function makeBulkEditRow() {
+    let row = mkTag('div', 'row py-3');
+    row.setAttribute('role', 'group');
+
+    let all_done = mkTag('button', 'btn btn-outline-secondary col', 'Check All');
+    all_done.addEventListener('click', allDoneClick);
+
+    let all_not_done = mkTag('button', 'btn btn-outline-secondary col', 'Un-check All');
+    all_not_done.addEventListener('click', allNotDoneClick);
+
+    let all_del = mkTag('button', 'btn btn-outline-secondary col', 'Clear Checked');
+    all_del.addEventListener('click', allDelClick);
+
+    row.appendChild(all_done);
+
+    row.appendChild(all_not_done);
+
+    row.appendChild(all_del);
+
+    return row;
+}
 
 function init() {
     LIST = localStorage.getItem('list') ? JSON.parse(localStorage.getItem('list')) : [];
     let lrgCol = mkTag('div', 'col-11 col-md-7');
     lrgCol.setAttribute('id', 'appCol');
+    //---------------------
     lrgCol.appendChild(makeInputHtml());
-
+    //-------------------------------------
+    lrgCol.appendChild(makeModeChangeRow());
+    //--------------------------------------
     let content_div = mkTag('div', 'row');
     let content_col = mkTag('div', 'col');
     content_col.setAttribute('id', 'todo_content');
 
     content_div.appendChild(content_col);
     lrgCol.appendChild(content_div);
+    //---------------------------------------
+    lrgCol.appendChild(makeBulkEditRow());
 
     app.appendChild(lrgCol);
 
