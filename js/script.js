@@ -27,6 +27,20 @@ class Todo {
     }
 
 }
+function find(qry_uuid) {
+    for (idx in LIST) {
+        if (qry_uuid == LIST[idx].uuid) {
+            return idx;
+        }
+    }
+}
+function delBtnClick(e) {
+    console.log(e.target.dataset.uuid);
+    console.log(LIST);
+    console.log(find(e.target.dataset.uuid));
+    LIST.splice(find(e.target.dataset.uuid), 1);
+    stateManager();
+}
 function makeItemHtml(obj) {
     let grp_Div = mkTag('div', 'row input-group mb-3');
 
@@ -43,14 +57,16 @@ function makeItemHtml(obj) {
     let txt = mkTag('span', 'input-group-text col', obj.title);
     grp_Div.appendChild(txt);
 
-    let appnd = mkTag('div','input-group-append col-2');
+    let appnd = mkTag('div', 'input-group-append col-2');
     let delBtn = mkTag('button', 'btn btn-outline-secondary', 'x');
     delBtn.setAttribute('type', 'button');
     delBtn.setAttribute('title', 'Delete');
-    
+    delBtn.setAttribute('data-uuid', obj.uuid); // custom html attribute
+    delBtn.addEventListener('click', delBtnClick);
+
     appnd.appendChild(delBtn);
     grp_Div.appendChild(appnd);
-    
+
     return grp_Div;
 }
 function returnContDiv() {
@@ -58,6 +74,7 @@ function returnContDiv() {
 }
 function popTodoItems() {
     let cont_div = returnContDiv();
+    cont_div.innerHTML = '';
     for (list_item of LIST) {
         let item_html = makeItemHtml(list_item);
         cont_div.prepend(item_html);
@@ -66,16 +83,17 @@ function popTodoItems() {
 function storeList() {
     localStorage.setItem('list', JSON.stringify(LIST));
 }
+
+function stateManager() {
+    popTodoItems();
+    storeList();
+}
 function submitClick(e) {
-    let cont_div = returnContDiv();
     let input_box = document.getElementById('inputBox');
-    cont_div.innerHTML = '';
     LIST.push(new Todo(input_box.value))
     input_box.value = '';
     input_box.focus();
-    popTodoItems();
-    storeList();
-    
+    stateManager();
 }
 
 // html creation --------
@@ -113,24 +131,22 @@ function makeInputHtml() {
 }
 
 function init() {
-    LIST = localStorage.getItem('list') ? JSON.parse(localStorage.getItem('list')): [];
+    LIST = localStorage.getItem('list') ? JSON.parse(localStorage.getItem('list')) : [];
     let lrgCol = mkTag('div', 'col-11 col-md-7');
     lrgCol.setAttribute('id', 'appCol');
     lrgCol.appendChild(makeInputHtml());
-    
+
     let content_div = mkTag('div', 'row');
     let content_col = mkTag('div', 'col');
     content_col.setAttribute('id', 'todo_content');
 
     content_div.appendChild(content_col);
     lrgCol.appendChild(content_div);
-    
+
     app.appendChild(lrgCol);
+
+    popTodoItems();
 }
 
 init();
-
-
-
-popTodoItems();
 
