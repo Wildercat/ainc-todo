@@ -28,10 +28,10 @@ class Todo {
 
 }
 function makeItemHtml(obj) {
-    let grp_Div = mkTag('div', 'input-group mb-3');
+    let grp_Div = mkTag('div', 'row input-group mb-3');
 
     // prepend section
-    let prep = mkTag('div', 'input-group-prepend');
+    let prep = mkTag('div', 'input-group-prepend col-2');
     let tick_Text = mkTag('div', 'input-group-text');
     let tick = mkTag('input');
     tick.setAttribute('type', 'checkbox');
@@ -40,36 +40,48 @@ function makeItemHtml(obj) {
     prep.appendChild(tick_Text);
     grp_Div.appendChild(prep);
 
-    let txt = mkTag('span', 'input-group-text', obj.title);
+    let txt = mkTag('span', 'input-group-text col', obj.title);
     grp_Div.appendChild(txt);
+
+    let appnd = mkTag('div','input-group-append col-2');
+    let delBtn = mkTag('button', 'btn btn-outline-secondary', 'x');
+    delBtn.setAttribute('type', 'button');
+    delBtn.setAttribute('title', 'Delete');
+    
+    appnd.appendChild(delBtn);
+    grp_Div.appendChild(appnd);
     
     return grp_Div;
 }
-function retContDiv() {
+function returnContDiv() {
     return document.getElementById('todo_content');
 }
 function popTodoItems() {
-    let cont_div = retContDiv();
+    let cont_div = returnContDiv();
     for (list_item of LIST) {
-        console.log('ayy');
         let item_html = makeItemHtml(list_item);
-        cont_div.appendChild(item_html);
+        cont_div.prepend(item_html);
     }
 }
 function storeList() {
     localStorage.setItem('list', JSON.stringify(LIST));
 }
 function submitClick(e) {
-    let cont_div = retContDiv();
+    let cont_div = returnContDiv();
+    let input_box = document.getElementById('inputBox');
     cont_div.innerHTML = '';
-    LIST.push(new Todo(document.getElementById('inputBox').value))
+    LIST.push(new Todo(input_box.value))
+    input_box.value = '';
+    input_box.focus();
     popTodoItems();
     storeList();
+    
 }
 
 // html creation --------
 function makeInputHtml() {
     // --- make html objects ---
+    let row = mkTag('div', 'row py-3');
     //input group div
     let inGrp = mkTag('div', 'input-group');
     // text field input tag
@@ -95,20 +107,25 @@ function makeInputHtml() {
 
     inGrp.appendChild(inField);
     inGrp.appendChild(inAppendDiv);
-    return inGrp;
+    row.appendChild(inGrp);
+    return row;
 
 }
 
 function init() {
-    LIST = JSON.parse(localStorage.getItem('list'));
-    let lrgCol = mkTag('div', 'col-lg-7');
+    LIST = localStorage.getItem('list') ? JSON.parse(localStorage.getItem('list')): [];
+    let lrgCol = mkTag('div', 'col-11 col-md-7');
+    lrgCol.setAttribute('id', 'appCol');
     lrgCol.appendChild(makeInputHtml());
+    
+    let content_div = mkTag('div', 'row');
+    let content_col = mkTag('div', 'col');
+    content_col.setAttribute('id', 'todo_content');
+
+    content_div.appendChild(content_col);
+    lrgCol.appendChild(content_div);
+    
     app.appendChild(lrgCol);
-
-    let content_div = mkTag('div');
-    content_div.setAttribute('id', 'todo_content');
-    app.appendChild(content_div);
-
 }
 
 init();
