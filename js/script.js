@@ -108,15 +108,29 @@ function popTodoItems() {
 function storeList() {
     localStorage.setItem('list', JSON.stringify(LIST));
 }
+function stateHighlight() {
+    let curBtnId;
+    for (let i = 0; i < 3; i++) {
+        let ht = document.getElementById(`state${i}`);
+        ht.className = 'btn btn-outline-secondary col';
+        if (STATE == i) {
+            curBtnId = `state${i}`;
+        }
+    }
+    curBtn = document.getElementById(curBtnId);
+    curBtn.className += ' bg-primary text-light';
+}
 
 function stateManager() {
     popTodoItems();
     storeList();
+    stateHighlight();
     // console.log(LIST);
 }
 function submitClick(e) {
     let input_box = document.getElementById('inputBox');
-    LIST.push(new Todo(input_box.value))
+    if (!input_box.value) { return null };
+    LIST.push(new Todo(input_box.value));
     input_box.value = '';
     input_box.focus();
     stateManager();
@@ -136,14 +150,9 @@ function allNotDoneClick() {
 }
 
 function allDelClick() {
-    for (let idx =0; idx < LIST.length; idx++) {
+    for (let idx = 0; idx < LIST.length; idx++) {
         if (LIST[idx].done) {
-            console.log(idx);
-            console.log('array before removing:');
-            console.log(LIST);
             LIST.splice(idx, 1);
-            console.log('array after removing:');
-            console.log(LIST);
             idx = -1;
         }
     }
@@ -191,10 +200,13 @@ function makeModeChangeRow() {
 
     let all_btn = mkTag('button', 'btn btn-outline-secondary col', 'Show All');
     all_btn.addEventListener('click', () => { STATE = 0; stateManager() });
+    all_btn.id = 'state0';
     let active_btn = mkTag('button', 'btn btn-outline-secondary col', 'Active');
     active_btn.addEventListener('click', () => { STATE = 1; stateManager() });
-    let done_btn = mkTag('button', 'btn btn-outline-secondary col', 'Completed');
+    active_btn.id = 'state1';
+    let done_btn = mkTag('button', 'btn btn-outline-secondary col', 'Checked');
     done_btn.addEventListener('click', () => { STATE = 2; stateManager() });
+    done_btn.id = 'state2';
 
     row.appendChild(all_btn);
     row.appendChild(active_btn);
