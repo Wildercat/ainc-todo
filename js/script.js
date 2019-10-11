@@ -87,11 +87,14 @@ function returnContDiv() {
 function popTodoItems() {
     let cont_div = returnContDiv();
     cont_div.innerHTML = '';
+    let done_count = 0;
+    let active_count = 0;
     if (STATE != 1) {
         for (list_item of LIST) {
             if (list_item.done) {
                 let item_html = makeItemHtml(list_item);
                 cont_div.prepend(item_html);
+                done_count++;
             }
         }
     }
@@ -100,9 +103,13 @@ function popTodoItems() {
             if (!list_item.done) {
                 let item_html = makeItemHtml(list_item);
                 cont_div.prepend(item_html);
+                active_count++;
             }
         }
     }
+    document.getElementById('count_all').textContent = ` (${done_count + active_count})`;
+    document.getElementById('count_active').textContent = ` (${active_count})`;
+    document.getElementById('count_done').textContent = ` (${done_count})`;
 }
 
 function storeList() {
@@ -198,15 +205,26 @@ function makeModeChangeRow() {
     let row = mkTag('div', 'row py-3');
     row.setAttribute('role', 'group');
 
-    let all_btn = mkTag('button', 'btn btn-outline-secondary col', 'Show All');
+    let all_btn = mkTag('button', 'btn btn-outline-secondary col text-dark', 'Show All');
     all_btn.addEventListener('click', () => { STATE = 0; stateManager() });
     all_btn.id = 'state0';
-    let active_btn = mkTag('button', 'btn btn-outline-secondary col', 'Active');
+    let count_all = mkTag('span', 'text-black-50');
+    count_all.id = 'count_all';
+    all_btn.appendChild(count_all);
+
+    let active_btn = mkTag('button', 'btn btn-outline-secondary col text-dark', 'Active');
     active_btn.addEventListener('click', () => { STATE = 1; stateManager() });
     active_btn.id = 'state1';
-    let done_btn = mkTag('button', 'btn btn-outline-secondary col', 'Checked');
+    let count_active = mkTag('span', 'text-black-50');
+    count_active.id = 'count_active';
+    active_btn.appendChild(count_active);
+
+    let done_btn = mkTag('button', 'btn btn-outline-secondary col text-dark', 'Checked');
     done_btn.addEventListener('click', () => { STATE = 2; stateManager() });
     done_btn.id = 'state2';
+    let count_done = mkTag('span', 'text-black-50');
+    count_done.id = 'count_done';
+    done_btn.appendChild(count_done);
 
     row.appendChild(all_btn);
     row.appendChild(active_btn);
